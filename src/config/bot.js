@@ -24,7 +24,7 @@ export const botConfig = {
     activities: [
       {
         name: "Custom Status", // required by Discord API, not shown in the client
-        state: "stalking",     // this is what people actually see
+        state: "CJ Sucks Dick & Sucks in general",     // this is what people actually see
         type: 4,               // Custom
       },
     ],
@@ -649,3 +649,85 @@ export function getRandomColor() {
 }
 
 export default botConfig;
+
+
+
+
+// =========================
+// REFEREE SYSTEM
+// =========================
+
+let refSpeed = 1.0; // default 1 second
+let counting = false;
+
+// EXACT pin triggers only
+const PIN_WORDS = [
+    "pinfall",
+    "roll up",
+    "ru",
+    "back slide",
+    "crucifix",
+    "cradle",
+    "school boy",
+    "hooks the leg",
+    "pretzel pin",
+    "small package",
+    "honor roll",
+    "cover",
+    "covers"
+];
+
+// =========================
+// SPEED COMMAND
+// =========================
+
+bot.on("messageCreate", async (message) => {
+    if (message.author.bot) return;
+
+    if (message.content.startsWith("!speed")) {
+        const parts = message.content.split(" ");
+        if (parts.length === 1) {
+            return message.reply(
+                `Current referee speed: **${refSpeed} seconds**\n(Use \`!speed 0.5\` or any value between **0.01–1.5**)`
+            );
+        }
+
+        const value = parseFloat(parts[1]);
+        if (isNaN(value) || value < 0.01 || value > 1.5) {
+            return message.reply("❌ Speed must be between **0.01 and 1.5** seconds.");
+        }
+
+        refSpeed = value;
+        return message.reply(`⏱️ Ref speed set to **${refSpeed} seconds**`);
+    }
+
+    // =========================
+    // PIN DETECTION
+    // =========================
+
+    const content = message.content.toLowerCase().trim();
+
+    if (!counting && PIN_WORDS.includes(content)) {
+        counting = true;
+
+        for (let i = 1; i <= 3; i++) {
+            await message.channel.send(`**${i}!**`);
+            await new Promise(resolve => setTimeout(resolve, refSpeed * 1000));
+        }
+
+        await message.channel.send("🔔 **THREE! THAT’S IT!**");
+        counting = false;
+    }
+});
+
+// =========================
+// REMOVE LEVEL-UP MESSAGES
+// =========================
+
+bot.on("messageCreate", async (message) => {
+    if (message.author.bot) return;
+
+    if (message.content.toLowerCase().includes("level up")) {
+        await message.delete().catch(() => {});
+    }
+});
